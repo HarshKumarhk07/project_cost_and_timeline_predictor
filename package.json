@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "express": "^5.2.1",
+    "mongoose": "^9.0.1",
+    "tailwindcss": "^4.1.17"
+  }
+}
