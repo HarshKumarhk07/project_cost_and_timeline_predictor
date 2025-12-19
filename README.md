@@ -54,27 +54,6 @@ root/
 │   │   └── services/ # API integrations (axios)
 ```
 
-## ⚠️ Current Status & Next Steps
-- **Environment Configuration:** 
-  - The backend requires a `.env` file with `MONGO_URI`, `JWT_SECRET`, and `PORT`.
-- **Pending Tasks:**
-  1. Configure `backend/.env`.
-  2. Start Backend (`npm start` in `/backend`).
-  3. Start Frontend (`npm run dev` in `/frontend`).
-  4. Verify the end-to-end prediction flow.
 
-## 🏃‍♂️ Getting Started
-1. **Setup Backend:**
-   ```bash
-   cd backend
-   # Create .env file with necessary variables
-   npm install
-   npm start
-   ```
 
-2. **Setup Frontend:**
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
+
