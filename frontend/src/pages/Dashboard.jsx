@@ -21,7 +21,7 @@ const Dashboard = () => {
             try {
                 const res = await predictionApi.getHistory();
                 const predictions = res.data.data || [];
-                
+
                 const totalPredictions = predictions.length;
                 const costs = predictions
                     .filter(p => p.outputs?.cost?.estimatedCost || p.outputs?.estimatedCost)
@@ -30,7 +30,7 @@ const Dashboard = () => {
                     .filter(p => p.outputs?.timeline?.estimatedDurationDays || p.outputs?.estimatedDuration)
                     .map(p => p.outputs?.timeline?.estimatedDurationDays || p.outputs?.estimatedDuration);
 
-                const avgCost = costs.length > 0 
+                const avgCost = costs.length > 0
                     ? Math.round(costs.reduce((a, b) => a + b, 0) / costs.length)
                     : 0;
                 const avgTime = timelines.length > 0
@@ -59,7 +59,7 @@ const Dashboard = () => {
             <header className="flex justify-between items-start">
                 <div>
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                        Welcome back, {firstName}!
+                        {user?.loginCount > 1 ? 'Welcome back' : 'Welcome'}, {firstName}!
                     </h1>
                     <p className="text-gray-600 text-lg">
                         Ready to analyze your next big project?

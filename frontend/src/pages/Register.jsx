@@ -9,6 +9,7 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [emailError, setEmailError] = useState('');
     const [loading, setLoading] = useState(false);
     const { signup } = useAuth();
     const navigate = useNavigate();
@@ -25,8 +26,27 @@ const Register = () => {
         };
     }, []);
 
+    const validateEmail = (email) => {
+        const regex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+        if (!regex.test(email)) {
+            setEmailError('Enter a valid email address');
+            return false;
+        }
+        setEmailError('');
+        return true;
+    };
+
+    const handleEmailChange = (e) => {
+        const val = e.target.value;
+        setEmail(val);
+        if (emailError) validateEmail(val);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateEmail(email)) return;
+
         setError('');
         setLoading(true);
         try {
@@ -69,9 +89,14 @@ const Register = () => {
                         type="email"
                         required
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={handleEmailChange}
+                        onBlur={() => validateEmail(email)}
                         placeholder="you@example.com"
+                        className={emailError ? "border-red-500 focus:ring-red-500" : ""}
                     />
+                    {emailError && (
+                        <p className="text-red-500 text-xs mt-1 ml-1">{emailError}</p>
+                    )}
                     <Input
                         label="Password"
                         type="password"
@@ -81,7 +106,7 @@ const Register = () => {
                         placeholder="••••••••"
                     />
 
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button type="submit" className="w-full" disabled={loading || !!emailError}>
                         {loading ? 'Creating account...' : 'Create Account'}
                     </Button>
                 </form>

@@ -22,12 +22,8 @@ const PredictionSchema = new mongoose.Schema({
         required: true
     },
     outputs: {
-        riskScore: Number,
-        estimatedCost: Number,
-        estimatedDuration: Number, // in days
-        confidenceLevel: Number, // 0-100
-        breakdown: Object, // detailed breakdown
-        recommendations: [String]
+        type: mongoose.Schema.Types.Mixed, // Allow nested structure (risk, cost, timeline objects)
+        required: true
     },
     status: {
         type: String,

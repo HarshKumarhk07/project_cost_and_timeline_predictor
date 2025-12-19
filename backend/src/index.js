@@ -22,6 +22,7 @@ app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/settings', settingsRoutes);
+app.use('/test-mongo', require('./routes/test.routes'));
 
 const predictRoutes = require('./routes/predict.routes');
 const predictHistoryRoutes = require('./routes/predictHistory');

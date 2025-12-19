@@ -2,9 +2,30 @@ const express = require('express');
 const router = express.Router();
 const { signup, login, me } = require('../controllers/auth.controller');
 const auth = require('../middleware/auth');
+const { check, validationResult } = require('express-validator');
 
-router.post('/signup', signup);
-router.post('/login', login);
+// Validation Middleware
+const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: errors.array()[0].msg });
+    }
+    next();
+};
+
+router.post('/signup', [
+    check('name')
+        .notEmpty().withMessage('Name is required')
+        .matches(/^[A-Za-z][A-Za-z0-9_]*$/).withMessage('Username must start with a letter and contain only letters, numbers, and underscores'),
+    check('email', 'Validation failed: Email must be a @gmail.com address').matches(/^[a-zA-Z0-9._-]+@gmail\.com$/),
+    check('password', 'Password must be at least 6 characters').isLength({ min: 6 })
+], validate, signup);
+
+router.post('/login', [
+    check('email', 'Validation failed: Email must be a @gmail.com address').matches(/^[a-zA-Z0-9._-]+@gmail\.com$/),
+    check('password', 'Password is required').exists()
+], validate, login);
+
 router.get('/me', auth, me);
 
 module.exports = router;

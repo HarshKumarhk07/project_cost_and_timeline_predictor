@@ -20,12 +20,21 @@ const PredictionResult = () => {
     }, [data, predictionId, navigate]);
 
     if (!data || !predictionId) {
+        console.warn('PredictionResult: Missing data or predictionId', { data, predictionId });
         return (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex items-center justify-center h-64 flex-col gap-4">
                 <Loader />
+                <p className="text-gray-500">Loading prediction details...</p>
+                {/* Debug helper: if it hangs here, user sees this */}
+                <Button variant="ghost" onClick={() => navigate('/predict/new')}>
+                    Return to Form
+                </Button>
             </div>
         );
     }
+
+    console.log('PredictionResult rendering with:', { data, predictionId });
+
 
     const handleDownloadPDF = async () => {
         setLoading(true);
@@ -158,7 +167,9 @@ const PredictionResult = () => {
                             <p className="text-xs font-medium text-gray-600 mb-2">Key Phases:</p>
                             <ul className="space-y-1">
                                 {timeline.phases.slice(0, 3).map((phase, i) => (
-                                    <li key={i} className="text-sm text-gray-600">• {phase}</li>
+                                    <li key={i} className="text-sm text-gray-600">
+                                        • {typeof phase === 'object' ? `${phase.name}: ${phase.duration}` : phase}
+                                    </li>
                                 ))}
                             </ul>
                         </div>
