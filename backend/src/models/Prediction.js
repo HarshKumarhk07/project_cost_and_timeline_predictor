@@ -17,6 +17,15 @@ const PredictionSchema = new mongoose.Schema({
         enum: ['Software', 'Construction', 'Marketing', 'Other'],
         default: 'Software'
     },
+    startDate: {
+        type: Date
+    },
+    endDate: {
+        type: Date
+    },
+    teamMembers: {
+        type: Number
+    },
     inputs: {
         type: Object, // Flexible to store different inputs for cost, timeline, risk
         required: true

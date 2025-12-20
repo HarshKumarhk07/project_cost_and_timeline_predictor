@@ -9,7 +9,8 @@ const {
     fullAnalysis,
     comparePredictions,
     getReportPDF,
-    getReportCSV
+    getReportCSV,
+    predictProject
 } = require('../controllers/predict.controller');
 
 router.use(auth);
@@ -19,6 +20,7 @@ router.post('/cost-breakdown', costBreakdown);
 router.post('/timeline-breakdown', timelineBreakdown);
 router.post('/recommendations', getRecommendations);
 router.post('/full-analysis', fullAnalysis);
+router.post('/', predictProject); // Main prediction endpoint
 
 router.get('/compare', comparePredictions);
 

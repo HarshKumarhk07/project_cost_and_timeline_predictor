@@ -1,14 +1,18 @@
 const Prediction = require('../models/Prediction');
 const MLService = require('../services/mlService');
 const PDFDocument = require('pdfkit');
+const axios = require('axios');
 
 
 // Helper to save prediction
-const savePrediction = async (user, type, inputs, outputs, title) => {
+const savePrediction = async (user, type, inputs, outputs, title, metadata = {}) => {
     const prediction = await Prediction.create({
         user: user.id,
-        title: title || `${type} Analysis - ${new Date().toISOString()}`,
-        projectType: inputs.projectType || 'Software',
+        title: title || metadata.projectName || `${type} Analysis - ${new Date().toISOString()}`,
+        projectType: metadata.projectType || inputs.projectType || 'Software',
+        startDate: metadata.startDate,
+        endDate: metadata.endDate,
+        teamMembers: metadata.teamMembers,
         inputs,
         outputs,
         status: 'completed'
@@ -218,6 +222,90 @@ exports.getReportPDF = async (req, res) => {
 
     } catch (error) {
         console.error('PDF Report Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// POST /predict (Main Project Cost/Timeline)
+exports.predictProject = async (req, res) => {
+    try {
+        const {
+            // ML Inputs
+            hoursSpent, taskCount, priority, budget,
+            // Metadata (Non-ML)
+            projectName, startDate, endDate, teamMembers, projectType
+        } = req.body;
+
+        // 1. Validation
+        if (!hoursSpent || !taskCount || !priority || !budget) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide all required fields: hoursSpent, taskCount, priority, budget'
+            });
+        }
+
+        // 2. Call Python ML API
+        // STRICT ISOLATION: ONLY send ML inputs to Python
+        const pythonPayload = {
+            hours_spent: hoursSpent,
+            task_count: taskCount,
+            budget,
+            priority
+        };
+
+        const mlResponse = await axios.post('http://127.0.0.1:5001/predict', pythonPayload);
+        const { predicted_cost, estimated_timeline_days } = mlResponse.data;
+
+        // 3. Persist to MongoDB
+        const inputs = {
+            hoursSpent,
+            taskCount,
+            priority,
+            budget
+        };
+
+        const outputs = {
+            cost: {
+                estimatedCost: predicted_cost,
+                confidence: 85
+            },
+            timeline: {
+                estimatedDurationDays: estimated_timeline_days
+            },
+            predictedCost: predicted_cost,
+            estimatedTimelineDays: estimated_timeline_days
+        };
+
+        const metadata = {
+            projectName,
+            startDate,
+            endDate,
+            teamMembers,
+            projectType // Pass to helper
+        };
+
+        const saved = await savePrediction(
+            req.user,
+            'Cost/Timeline',
+            inputs,
+            outputs,
+            projectName,
+            metadata
+        );
+
+        // MANDATORY: Return flat JSON object, keys as requested by User
+        res.status(200).json({
+            predictedCost: predicted_cost,
+            estimatedTimelineDays: estimated_timeline_days,
+            predictionId: saved._id // Keeping this as it might be useful, but user emphasized the other two.
+        });
+
+    } catch (error) {
+        console.error('Prediction Error:', error.message);
+        if (error.response) {
+            console.error('ML Service Error:', error.response.data);
+            return res.status(500).json({ success: false, message: 'ML Service Error', details: error.response.data });
+        }
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

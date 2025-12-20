@@ -10,7 +10,13 @@ const settingsRoutes = require('./routes/settings.routes');
 const app = express();
 
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://project-cost-and-timeline-predictor.vercel.app"
+    ],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -29,6 +35,7 @@ const predictHistoryRoutes = require('./routes/predictHistory');
 const adminRoutes = require('./routes/admin.routes');
 
 app.use('/predict', predictRoutes);
+app.use('/api/predict', predictRoutes); // Add requested /api/predict endpoint
 app.use('/predict', predictHistoryRoutes);
 app.use('/admin', adminRoutes);
 

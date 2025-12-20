@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
-import { Loader } from '../components/ui/Loader';
 import predictionApi from '../services/predictionApi';
 
 const NewPrediction = () => {
@@ -11,15 +10,15 @@ const NewPrediction = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
-        title: '',
-        projectType: 'Software',
-        teamSize: '',
-        experienceLevel: 'Intermediate',
-        techStack: '',
-        numberOfFeatures: '',
-        complexityLevel: 'Medium',
-        estimatedHours: '',
+        projectName: '',
+        startDate: '',
+        endDate: '',
+        teamMembers: '',
+        hoursSpent: '',
+        taskCount: '',
+        budget: '',
         priority: 'Medium',
+        projectType: 'Software'
     });
 
     const handleChange = (e) => {
@@ -37,32 +36,51 @@ const NewPrediction = () => {
 
         try {
             // Validate required fields
-            if (!formData.title || !formData.teamSize || !formData.numberOfFeatures || !formData.estimatedHours) {
+            if (!formData.hoursSpent || !formData.taskCount || !formData.budget || !formData.priority) {
                 setError('Please fill in all required fields');
                 setLoading(false);
                 return;
             }
 
-            const payload = {
-                title: formData.title,
+            const requestData = {
+                // Metadata
+                projectName: formData.projectName,
+                startDate: formData.startDate,
+                endDate: formData.endDate,
+                teamMembers: formData.teamMembers ? parseInt(formData.teamMembers) : undefined,
                 projectType: formData.projectType,
-                teamSize: parseInt(formData.teamSize),
-                experienceLevel: formData.experienceLevel,
-                techStack: formData.techStack.split(',').map(s => s.trim()).filter(Boolean),
-                numberOfFeatures: parseInt(formData.numberOfFeatures),
-                complexityLevel: formData.complexityLevel,
-                estimatedHours: parseInt(formData.estimatedHours),
+                // ML Inputs
+                hoursSpent: parseFloat(formData.hoursSpent),
+                taskCount: parseFloat(formData.taskCount),
+                budget: parseFloat(formData.budget),
                 priority: formData.priority,
             };
 
-            const res = await predictionApi.fullAnalysis(payload);
-            
-            // Navigate to result page with prediction data
+            const res = await predictionApi.predictProject(requestData);
+
+            // Correctly read flat response values requested by current task
+            const { predictedCost, estimatedTimelineDays, predictionId } = res.data;
+
+            // Navigate to result page with prediction data in the structure PredictionResult expects
             navigate('/predict/result', {
                 state: {
-                    predictionId: res.data.predictionId,
-                    data: res.data.data,
-                    inputs: payload
+                    predictionId: predictionId,
+                    data: {
+                        cost: {
+                            estimatedCost: predictedCost ?? 0,
+                            confidence: 85
+                        },
+                        timeline: {
+                            estimatedDurationDays: estimatedTimelineDays ?? 0,
+                            phases: [] // Optional: provide empty phases to valid undefined checks
+                        },
+                        risk: {
+                            riskScore: 0, // Default safe value
+                            level: 'Low'
+                        },
+                        recommendations: []
+                    },
+                    inputs: requestData
                 }
             });
         } catch (err) {
@@ -74,10 +92,10 @@ const NewPrediction = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-2xl mx-auto space-y-8">
             <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">New Project Prediction</h1>
-                <p className="text-gray-600">Fill in the details below to get AI-powered cost and timeline estimates</p>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Project Prediction</h1>
+                <p className="text-gray-600">Enter project details to estimate Cost and Timeline.</p>
             </div>
 
             {error && (
@@ -87,31 +105,55 @@ const NewPrediction = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Project Overview Section */}
                 <Card>
                     <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-                        Project Overview
+                        Project Details
                     </h2>
                     <div className="space-y-5">
                         <Input
-                            label="Project Title *"
-                            name="title"
-                            value={formData.title}
+                            label="Project Name"
+                            name="projectName"
+                            value={formData.projectName || ''}
                             onChange={handleChange}
-                            placeholder="e.g. E-Commerce Platform"
-                            required
+                            placeholder="e.g. Website Redesign"
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <Input
+                                label="Start Date"
+                                name="startDate"
+                                type="date"
+                                value={formData.startDate || ''}
+                                onChange={handleChange}
+                            />
+                            <Input
+                                label="End Date"
+                                name="endDate"
+                                type="date"
+                                value={formData.endDate || ''}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <Input
+                            label="Team Members"
+                            name="teamMembers"
+                            type="number"
+                            min="1"
+                            value={formData.teamMembers || ''}
+                            onChange={handleChange}
+                            placeholder="e.g. 5"
                         />
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Project Type *
+                                Project Type
                             </label>
                             <select
                                 name="projectType"
-                                value={formData.projectType}
+                                value={formData.projectType || 'Software'}
                                 onChange={handleChange}
                                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all"
-                                required
                             >
                                 <option value="Software">Software Development</option>
                                 <option value="Construction">Construction</option>
@@ -122,108 +164,41 @@ const NewPrediction = () => {
                     </div>
                 </Card>
 
-                {/* Team & Experience Section */}
                 <Card>
                     <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-                        Team & Experience
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <Input
-                            label="Team Size *"
-                            name="teamSize"
-                            type="number"
-                            min="1"
-                            value={formData.teamSize}
-                            onChange={handleChange}
-                            placeholder="e.g. 5"
-                            required
-                        />
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Experience Level *
-                            </label>
-                            <select
-                                name="experienceLevel"
-                                value={formData.experienceLevel}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all"
-                                required
-                            >
-                                <option value="Beginner">Beginner</option>
-                                <option value="Intermediate">Intermediate</option>
-                                <option value="Advanced">Advanced</option>
-                                <option value="Expert">Expert</option>
-                            </select>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Technical Details Section */}
-                <Card>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-                        Technical Details
+                        Prediction Requirements
                     </h2>
                     <div className="space-y-5">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Tech Stack
-                            </label>
-                            <textarea
-                                name="techStack"
-                                value={formData.techStack}
-                                onChange={handleChange}
-                                placeholder="e.g. React, Node.js, MongoDB (comma-separated)"
-                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-400 transition-all h-24"
-                            />
-                            <p className="mt-1.5 text-sm text-gray-500">Enter technologies separated by commas</p>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Project Scope Section */}
-                <Card>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-                        Project Scope
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <Input
-                            label="Number of Features *"
-                            name="numberOfFeatures"
+                            label="Hours Spent *"
+                            name="hoursSpent"
                             type="number"
-                            min="1"
-                            value={formData.numberOfFeatures}
+                            min="0"
+                            value={formData.hoursSpent}
                             onChange={handleChange}
-                            placeholder="e.g. 10"
+                            placeholder="e.g. 150"
                             required
                         />
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Complexity Level *
-                            </label>
-                            <select
-                                name="complexityLevel"
-                                value={formData.complexityLevel}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 transition-all"
-                                required
-                            >
-                                <option value="Low">Low</option>
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
-                                <option value="Very High">Very High</option>
-                            </select>
-                        </div>
-
                         <Input
-                            label="Estimated Hours *"
-                            name="estimatedHours"
+                            label="Task Count *"
+                            name="taskCount"
                             type="number"
                             min="1"
-                            value={formData.estimatedHours}
+                            value={formData.taskCount}
                             onChange={handleChange}
-                            placeholder="e.g. 800"
+                            placeholder="e.g. 25"
+                            required
+                        />
+
+                        <Input
+                            label="Budget ($) *"
+                            name="budget"
+                            type="number"
+                            min="0"
+                            value={formData.budget}
+                            onChange={handleChange}
+                            placeholder="e.g. 5000"
                             required
                         />
 
@@ -241,13 +216,11 @@ const NewPrediction = () => {
                                 <option value="Low">Low</option>
                                 <option value="Medium">Medium</option>
                                 <option value="High">High</option>
-                                <option value="Critical">Critical</option>
                             </select>
                         </div>
                     </div>
                 </Card>
 
-                {/* Submit Button */}
                 <div className="flex justify-end gap-4">
                     <Button
                         type="button"
@@ -258,7 +231,7 @@ const NewPrediction = () => {
                         Cancel
                     </Button>
                     <Button type="submit" disabled={loading} className="min-w-[150px]">
-                        {loading ? 'Analyzing...' : 'Generate Prediction'}
+                        {loading ? 'Analyzing...' : 'Predict'}
                     </Button>
                 </div>
             </form>
