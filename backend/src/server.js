@@ -1,8 +1,11 @@
 require('dotenv').config();
 const { connectDB } = require('./config/db');
+const predictHistoryRoutes = require('./src/routes/predictHistory');
 const app = require('./index');
 
 const PORT = process.env.PORT || 5000;
+
+app.use('/predict', predictHistoryRoutes);
 
 const startServer = async () => {
     try {
