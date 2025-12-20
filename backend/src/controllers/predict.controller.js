@@ -244,19 +244,15 @@ exports.predictProject = async (req, res) => {
             });
         }
 
-        // 2. Call Python ML API
-        // STRICT ISOLATION: ONLY send ML inputs to Python
-        const pythonPayload = {
-            hours_spent: hoursSpent,
-            task_count: taskCount,
-            budget,
-            priority
+        // 2. PRE-SAVE to MongoDB (Status: PENDING_ML)
+        const initialMetadata = {
+            projectName,
+            startDate,
+            endDate,
+            teamMembers,
+            projectType
         };
 
-        const mlResponse = await axios.post('http://127.0.0.1:5001/predict', pythonPayload);
-        const { predicted_cost, estimated_timeline_days } = mlResponse.data;
-
-        // 3. Persist to MongoDB
         const inputs = {
             hoursSpent,
             taskCount,
@@ -264,40 +260,68 @@ exports.predictProject = async (req, res) => {
             budget
         };
 
-        const outputs = {
-            cost: {
-                estimatedCost: predicted_cost,
-                confidence: 85
-            },
-            timeline: {
-                estimatedDurationDays: estimated_timeline_days
-            },
-            predictedCost: predicted_cost,
-            estimatedTimelineDays: estimated_timeline_days
-        };
-
-        const metadata = {
-            projectName,
+        // Create initial record
+        let prediction = await new Prediction({
+            user: req.user.id,
+            title: projectName || `Cost/Timeline Analysis - ${new Date().toISOString()}`,
+            projectType: projectType || 'Software',
             startDate,
             endDate,
             teamMembers,
-            projectType // Pass to helper
+            inputs,
+            outputs: {}, // Empty initially
+            status: 'pending_ml' // New status
+        }).save();
+
+        console.log(`PREDICTION SAVED TO DB (ID: ${prediction._id}) - Status: PENDING_ML`);
+
+        // 3. Call Python ML API (OPTIONAL)
+        const pythonPayload = {
+            hours_spent: hoursSpent,
+            task_count: taskCount,
+            budget,
+            priority
         };
 
-        const saved = await savePrediction(
-            req.user,
-            'Cost/Timeline',
-            inputs,
-            outputs,
-            projectName,
-            metadata
-        );
+        let predicted_cost = 0;
+        let estimated_timeline_days = 0;
+        let mlSuccess = false;
 
-        // MANDATORY: Return flat JSON object, keys as requested by User
+        try {
+            const mlResponse = await axios.post('http://127.0.0.1:5001/predict', pythonPayload);
+            predicted_cost = mlResponse.data.predicted_cost;
+            estimated_timeline_days = mlResponse.data.estimated_timeline_days;
+            mlSuccess = true;
+        } catch (mlError) {
+            console.warn("ML SKIPPED (NOT DEPLOYED OR UNREACHABLE)");
+            // Do NOT throw error, just continue with flag false
+        }
+
+        // 4. Update MongoDB with results (if ML succeeded)
+        if (mlSuccess) {
+            const outputs = {
+                cost: {
+                    estimatedCost: predicted_cost,
+                    confidence: 85
+                },
+                timeline: {
+                    estimatedDurationDays: estimated_timeline_days
+                },
+                predictedCost: predicted_cost,
+                estimatedTimelineDays: estimated_timeline_days
+            };
+
+            prediction.outputs = outputs;
+            prediction.status = 'completed';
+            await prediction.save();
+            console.log(`PREDICTION UPDATED (ID: ${prediction._id}) - Status: COMPLETED`);
+        }
+
+        // MANDATORY: Return flat JSON object
         res.status(200).json({
             predictedCost: predicted_cost,
             estimatedTimelineDays: estimated_timeline_days,
-            predictionId: saved._id // Keeping this as it might be useful, but user emphasized the other two.
+            predictionId: prediction._id
         });
 
     } catch (error) {
