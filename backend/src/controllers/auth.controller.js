@@ -8,17 +8,28 @@ function signToken(id) {
 }
 
 exports.signup = async (req, res) => {
+  console.log("SIGNUP HIT");
   try {
     const { name, email, password } = req.body;
+    console.log("Signup Payload:", { name, email });
 
     // Check if user exists
     const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ message: 'Email exists' });
+    if (exists) {
+      console.log("Email already exists:", email);
+      return res.status(400).json({ message: 'Email exists' });
+    }
+
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashed, loginCount: 1 });
+    console.log("User Created successfully. ID:", user._id);
+
     const token = signToken(user._id);
-    res.json({ success: true, user: { id: user._id, email: user.email, name: user.name }, token });
-  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+    res.status(201).json({ success: true, user: { id: user._id, email: user.email, name: user.name }, token });
+  } catch (err) {
+    console.error("Signup Controller Error:", err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.login = async (req, res) => {
