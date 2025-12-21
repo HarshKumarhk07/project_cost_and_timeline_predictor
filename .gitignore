@@ -4,3 +4,5 @@ dist/
 node_modules/
 backend/node_modules/
 predict_cost_and_timeline/node_modules/
+
+.env.example
