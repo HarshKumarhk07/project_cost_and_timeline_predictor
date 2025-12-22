@@ -18,11 +18,11 @@ cost_model = None
 try:
     if os.path.exists(MODEL_PATH):
         cost_model = joblib.load(MODEL_PATH)
-        print(f"✅ SUCCESS: Model loaded (Path: {MODEL_PATH})")
+        print(f"SUCCESS: Model loaded (Path: {MODEL_PATH})")
     else:
-        print(f"❌ ERROR: Model file not found at {MODEL_PATH}")
+        print(f"ERROR: Model file not found at {MODEL_PATH}")
 except Exception as e:
-    print(f"❌ CRITICAL ERROR: Failed to load model: {e}")
+    print(f"CRITICAL ERROR: Failed to load model: {e}")
 
 # --- TIMELINE LOGIC ---
 PRIORITY_MAP = {'High': 0, 'Low': 1, 'Medium': 2}
