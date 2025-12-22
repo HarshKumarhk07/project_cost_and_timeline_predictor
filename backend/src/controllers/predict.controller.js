@@ -288,7 +288,8 @@ exports.predictProject = async (req, res) => {
         let mlSuccess = false;
 
         try {
-            const mlResponse = await axios.post('http://127.0.0.1:5001/predict', pythonPayload);
+            const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://127.0.0.1:5001';
+            const mlResponse = await axios.post(`${mlServiceUrl}/predict`, pythonPayload);
             predicted_cost = mlResponse.data.predicted_cost;
             estimated_timeline_days = mlResponse.data.estimated_timeline_days;
             mlSuccess = true;
