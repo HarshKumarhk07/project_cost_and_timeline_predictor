@@ -1,13 +1,19 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!API_BASE_URL) {
+    throw new Error('VITE_API_BASE_URL is not defined');
+}
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000', // Use env var, fallback to localhost for local dev
+    baseURL: API_BASE_URL.replace(/\/$/, ''), // remove trailing slash if any
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Add a request interceptor
+// Request interceptor
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -16,12 +22,10 @@ api.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
-// Add a response interceptor
+// Response interceptor
 api.interceptors.response.use(
     (response) => response,
     (error) => {
