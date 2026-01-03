@@ -58,24 +58,38 @@ def predict():
             return jsonify({"error": f"Invalid priority '{priority}'. Must be High, Medium, or Low"}), 400
 
         # 2. Prepare Feature Vector
-        # Ensure fields match training schema EXACTLY
-        # Features: [priority_encoded, budget, hours_spent, task_count]
-        features = pd.DataFrame([{
+        
+        # 2. Prepare Feature Vector
+        input_data = {
             'priority_encoded': PRIORITY_MAP[priority],
             'budget': float(data['budget']),
             'hours_spent': float(data['hours_spent']),
             'task_count': float(data['task_count'])
-        }])
-
+        }
+        
         # 3. Model Prediction (Cost)
         predicted_cost = 0.0
         if cost_model:
             try:
-                predicted_cost = float(cost_model.predict(features)[0])
+                # DYNAMIC FEATURE ALIGNMENT
+                if hasattr(cost_model, 'feature_names_in_'):
+                    feature_order = list(cost_model.feature_names_in_)
+                    features = pd.DataFrame([input_data])[feature_order]
+                else:
+                    # Fallback to hardcoded list
+                    features = pd.DataFrame([{
+                        'priority_encoded': PRIORITY_MAP[priority],
+                        'budget': float(data['budget']),
+                        'hours_spent': float(data['hours_spent']),
+                        'task_count': float(data['task_count'])
+                    }])
+
+                prediction = cost_model.predict(features)
+                predicted_cost = float(prediction[0])
                 predicted_cost = max(0, round(predicted_cost, 2))
+                
             except Exception as e:
                 print(f"Prediction logic error: {e}")
-                # Don't crash, return 0 with error log
                 predicted_cost = 0.0
         else:
             print("Warning: Prediction requested but model is not loaded.")
