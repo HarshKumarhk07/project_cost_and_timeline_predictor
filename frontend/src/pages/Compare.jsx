@@ -100,11 +100,10 @@ const Compare = () => {
                                         <div
                                             key={p._id}
                                             onClick={() => toggleSelection(p._id)}
-                                            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                                                isSelected
+                                            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${isSelected
                                                     ? 'border-indigo-500 bg-indigo-50'
                                                     : 'border-gray-200 hover:border-indigo-300 bg-white'
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex items-start justify-between mb-2">
                                                 <h4 className="font-semibold text-gray-900">{p.title}</h4>
@@ -124,8 +123,8 @@ const Compare = () => {
                                 })}
                             </div>
                             <div className="flex justify-end">
-                                <Button 
-                                    onClick={handleCompare} 
+                                <Button
+                                    onClick={handleCompare}
                                     disabled={selectedIds.length < 2 || comparing}
                                 >
                                     {comparing ? 'Comparing...' : `Compare Selected (${selectedIds.length})`}
@@ -138,9 +137,9 @@ const Compare = () => {
 
             {comparisonData && comparisonData.length > 0 && (
                 <div>
-                    <Button 
-                        onClick={() => setComparisonData(null)} 
-                        variant="secondary" 
+                    <Button
+                        onClick={() => setComparisonData(null)}
+                        variant="secondary"
                         className="mb-4"
                     >
                         Back to Selection
@@ -149,7 +148,6 @@ const Compare = () => {
                         {comparisonData.map(item => {
                             const cost = item.outputs?.cost?.estimatedCost || item.outputs?.estimatedCost || 0;
                             const timeline = item.outputs?.timeline?.estimatedDurationDays || item.outputs?.estimatedDuration || 0;
-                            const riskScore = item.outputs?.risk?.riskScore || item.outputs?.riskScore || 0;
                             return (
                                 <Card key={item._id} className="border-l-4 border-indigo-500">
                                     <h3 className="text-xl font-bold text-gray-900 mb-4">{item.title}</h3>
@@ -166,14 +164,6 @@ const Compare = () => {
                                                 {Math.ceil(timeline / 7)} weeks
                                             </p>
                                             <p className="text-sm text-gray-600">{timeline} days</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-600 uppercase tracking-wide mb-1">Risk Score</p>
-                                            <p className={`text-2xl font-bold ${
-                                                riskScore >= 70 ? 'text-red-600' : riskScore >= 40 ? 'text-amber-600' : 'text-emerald-600'
-                                            }`}>
-                                                {riskScore}/100
-                                            </p>
                                         </div>
                                         <div className="pt-4 border-t border-gray-200">
                                             <p className="text-xs text-gray-600 uppercase tracking-wide mb-1">Project Type</p>
