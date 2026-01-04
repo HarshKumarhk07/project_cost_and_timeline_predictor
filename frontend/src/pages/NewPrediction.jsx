@@ -58,31 +58,44 @@ const NewPrediction = () => {
 
             const res = await predictionApi.predictProject(requestData);
 
-            // Correctly read flat response values requested by current task
-            const { predictedCost, estimatedTimelineDays, predictionId } = res.data;
+            console.log('Prediction Response:', res.data); // Debug log
+
+            // FIX: Handle real ML service response format (snake_case)
+            // Backend now returns: { predicted_cost, estimated_timeline_days }
+            // We also handle potential existing camelCase for robustness
+            const {
+                predicted_cost,
+                estimated_timeline_days,
+                predictedCost,
+                estimatedTimelineDays,
+                predictionId
+            } = res.data;
+
+            // Resolve values (prefer snake_case as per new backend, fall back to camelCase)
+            const resolvedCost = predicted_cost !== undefined ? predicted_cost : predictedCost;
+            const resolvedTimeline = estimated_timeline_days !== undefined ? estimated_timeline_days : estimatedTimelineDays;
 
             // Navigate to result page with prediction data in the structure PredictionResult expects
+            // If predictionId is missing (direct ML response), use a temporary ID to bypass the guard in PredictionResult
             navigate('/predict/result', {
                 state: {
-                    predictionId: predictionId,
+                    predictionId: predictionId || `temp-${Date.now()}`,
                     data: {
                         cost: {
-                            estimatedCost: predictedCost ?? 0,
+                            estimatedCost: resolvedCost ?? 0,
                             confidence: 85
                         },
                         timeline: {
-                            estimatedDurationDays: estimatedTimelineDays ?? 0,
-                            phases: [] // Optional: provide empty phases to valid undefined checks
+                            estimatedDurationDays: resolvedTimeline ?? 0,
+                            phases: []
                         },
-                        risk: {
-                            riskScore: 0, // Default safe value
-                            level: 'Low'
-                        },
+
                         recommendations: []
                     },
                     inputs: requestData
                 }
             });
+
         } catch (err) {
             console.error('Prediction error:', err);
             setError(err.response?.data?.message || 'Failed to generate prediction. Please try again.');

@@ -76,20 +76,7 @@ const PredictionResult = () => {
 
     const cost = data.cost || {};
     const timeline = data.timeline || {};
-    const risk = data.risk || {};
     const recommendations = data.recommendations || [];
-
-    const getRiskColor = (score) => {
-        if (score >= 70) return 'bg-red-100 text-red-800 border-red-300';
-        if (score >= 40) return 'bg-amber-100 text-amber-800 border-amber-300';
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-    };
-
-    const getRiskIcon = (score) => {
-        if (score >= 70) return <FaExclamationTriangle />;
-        if (score >= 40) return <FaExclamationTriangle />;
-        return <FaCheckCircle />;
-    };
 
     return (
         <div className="max-w-6xl mx-auto space-y-8">
@@ -112,7 +99,7 @@ const PredictionResult = () => {
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Cost Card */}
                 <Card className="border-l-4 border-emerald-500">
                     <div className="flex items-center justify-between mb-4">
@@ -175,52 +162,27 @@ const PredictionResult = () => {
                         </div>
                     )}
                 </Card>
-
-                {/* Risk Card */}
-                <Card className={`border-l-4 ${risk.riskScore >= 70 ? 'border-red-500' : risk.riskScore >= 40 ? 'border-amber-500' : 'border-emerald-500'}`}>
-                    <div className="flex items-center justify-between mb-4">
-                        <div className={`p-3 rounded-lg ${risk.riskScore >= 70 ? 'bg-red-100' : risk.riskScore >= 40 ? 'bg-amber-100' : 'bg-emerald-100'}`}>
-                            <FaShieldAlt className={`text-2xl ${risk.riskScore >= 70 ? 'text-red-600' : risk.riskScore >= 40 ? 'text-amber-600' : 'text-emerald-600'}`} />
-                        </div>
-                        <span className={`text-sm font-medium px-3 py-1 rounded-full border ${getRiskColor(risk.riskScore || 0)}`}>
-                            {risk.level || 'Medium'}
-                        </span>
-                    </div>
-                    <h3 className="text-sm font-medium text-gray-600 mb-2">Risk Level</h3>
-                    <p className="text-4xl font-bold text-gray-900 mb-4">
-                        {risk.riskScore || 0}
-                        <span className="text-lg text-gray-600">/100</span>
-                    </p>
-                    {risk.factors && risk.factors.length > 0 && (
-                        <div className="pt-4 border-t border-gray-200">
-                            <p className="text-xs font-medium text-gray-600 mb-2">Key Risk Factors:</p>
-                            <ul className="space-y-1">
-                                {risk.factors.slice(0, 3).map((factor, i) => (
-                                    <li key={i} className="text-sm text-gray-600">• {factor}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </Card>
             </div>
 
             {/* Recommendations */}
-            {recommendations.length > 0 && (
-                <Card>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FaCheckCircle className="text-emerald-600" />
-                        Recommendations
-                    </h2>
-                    <ul className="space-y-3">
-                        {recommendations.map((rec, i) => (
-                            <li key={i} className="flex items-start gap-3">
-                                <span className="text-emerald-600 mt-1">•</span>
-                                <span className="text-gray-700">{rec}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </Card>
-            )}
+            {
+                recommendations.length > 0 && (
+                    <Card>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <FaCheckCircle className="text-emerald-600" />
+                            Recommendations
+                        </h2>
+                        <ul className="space-y-3">
+                            {recommendations.map((rec, i) => (
+                                <li key={i} className="flex items-start gap-3">
+                                    <span className="text-emerald-600 mt-1">•</span>
+                                    <span className="text-gray-700">{rec}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </Card>
+                )
+            }
 
             {/* Actions */}
             <Card className="bg-gray-50">
@@ -251,7 +213,7 @@ const PredictionResult = () => {
                     </div>
                 </div>
             </Card>
-        </div>
+        </div >
     );
 };
 

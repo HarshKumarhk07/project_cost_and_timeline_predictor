@@ -111,12 +111,6 @@ const History = () => {
         });
     };
 
-    const getRiskColor = (score) => {
-        if (score >= 70) return 'bg-red-100 text-red-800 border-red-300';
-        if (score >= 40) return 'bg-amber-100 text-amber-800 border-amber-300';
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-    };
-
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -151,16 +145,14 @@ const History = () => {
                 <div className="grid grid-cols-1 gap-4">
                     {history.map((item) => {
                         const cost = item.outputs?.cost?.estimatedCost || item.outputs?.estimatedCost || 0;
-                        const riskScore = item.outputs?.risk?.riskScore || item.outputs?.riskScore || 0;
                         const timeline = item.outputs?.timeline?.estimatedDurationDays || item.outputs?.estimatedDuration || 0;
                         const isSelected = selected.has(item._id);
 
                         return (
                             <Card
                                 key={item._id}
-                                className={`border-2 transition-all cursor-pointer hover:shadow-lg ${
-                                    isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'
-                                }`}
+                                className={`border-2 transition-all cursor-pointer hover:shadow-lg ${isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'
+                                    }`}
                                 onClick={() => toggleSelect(item._id)}
                             >
                                 <div className="flex items-start justify-between">
@@ -169,9 +161,6 @@ const History = () => {
                                             <h3 className="text-xl font-semibold text-gray-900">{item.title}</h3>
                                             <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                                 {item.projectType}
-                                            </span>
-                                            <span className={`text-xs font-semibold px-2 py-1 rounded border ${getRiskColor(riskScore)}`}>
-                                                Risk: {riskScore}
                                             </span>
                                         </div>
                                         <div className="grid grid-cols-3 gap-4 mt-4">
