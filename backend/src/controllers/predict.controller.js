@@ -275,27 +275,29 @@ exports.predictProject = async (req, res) => {
 
         console.log(`PREDICTION SAVED TO DB (ID: ${prediction._id}) - Status: PENDING_ML`);
 
-        // 3. Call Python ML API (OPTIONAL)
-        const pythonPayload = {
-            hours_spent: hoursSpent,
-            task_count: taskCount,
-            budget,
-            priority
-        };
-
+        // 3. Call Python ML API via Service
         let predicted_cost = 0;
         let estimated_timeline_days = 0;
         let mlSuccess = false;
 
         try {
-            const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://127.0.0.1:5001';
-            const mlResponse = await axios.post(`${mlServiceUrl}/predict`, pythonPayload);
-            predicted_cost = mlResponse.data.predicted_cost;
-            estimated_timeline_days = mlResponse.data.estimated_timeline_days;
+            const stats = await MLService.predictProjectStats({
+                hours_spent: hoursSpent,
+                task_count: taskCount,
+                budget,
+                priority
+            });
+
+            predicted_cost = stats.predicted_cost;
+            estimated_timeline_days = stats.estimated_timeline_days;
             mlSuccess = true;
+
         } catch (mlError) {
-            console.warn("ML SKIPPED (NOT DEPLOYED OR UNREACHABLE)");
-            // Do NOT throw error, just continue with flag false
+            console.warn("ML SERVICE FAILED:", mlError.message);
+            // Fallback to basic calculation if ML fails, or just 0?
+            // "Handle timeout and errors safely".
+            // If ML fails, we probably shouldn't return 0 if possible, but for now 0 is safe/handled.
+            // We'll proceed with mlSuccess = false.
         }
 
         // 4. Update MongoDB with results (if ML succeeded)

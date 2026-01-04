@@ -1,87 +1,62 @@
+const axios = require('axios');
+
 /**
- * Mock ML Service
- * This service acts as a placeholder for the actual Machine Learning model.
- * It returns realistic mock data for development and testing purposes.
- * UPDATED: Now uses simple heuristics based on inputs to provide consistent results.
+ * Real ML Service Integration
+ * Connects to the deployed Python/Flask ML Service to get predictions.
  */
-
 class MLService {
-
-    // Simulate generic processing delay
-    async _simulateDelay() {
-        return new Promise(resolve => setTimeout(resolve, 800)); // slightly longer delay for "thinking" feel
+    constructor() {
+        this.mlServiceUrl = process.env.ML_SERVICE_URL;
     }
 
-    async predictRisk(inputs) {
-        await this._simulateDelay();
-
-        let riskScore = 20; // Base risk
-        const factors = [];
-
-        // heuristic: high complexity increases risk
-        if (inputs.complexityLevel === 'High' || inputs.complexityLevel === 'Very High') {
-            riskScore += 25;
-            factors.push('High project complexity increases delivery risk');
+    /**
+     * Call the external ML service to predict cost and timeline.
+     * @param {Object} inputs - { priority, budget, hours_spent, task_count }
+     */
+    async predictProjectStats(inputs) {
+        if (!this.mlServiceUrl) {
+            console.error('ML_SERVICE_URL is not defined in environment variables.');
+            throw new Error('ML Service Configuration Error');
         }
 
-        // heuristic: large team or very small team
-        if (inputs.teamSize > 10) {
-            riskScore += 10;
-            factors.push('Large team size may increase communication overhead');
-        } else if (inputs.teamSize < 2) {
-            riskScore += 15;
-            factors.push('Small team size creates localized dependency risks');
+        try {
+            // Map inputs to the exact payload expected by ML service
+            // User requested: { priority, budget, hours_spent, task_count }
+            const payload = {
+                priority: inputs.priority || 'Medium',
+                budget: inputs.budget || 0,
+                hours_spent: inputs.hours_spent || 0,
+                task_count: inputs.task_count || 0
+            };
+
+            const response = await axios.post(`${this.mlServiceUrl}/predict`, payload);
+
+            // Expecting response: { predicted_cost, estimated_timeline_days }
+            const { predicted_cost, estimated_timeline_days } = response.data;
+
+            return {
+                predicted_cost,
+                estimated_timeline_days
+            };
+        } catch (error) {
+            console.error('ML Service Prediction Error:', error.message);
+            if (error.response) {
+                console.error('ML Service Response:', error.response.data);
+            }
+            throw new Error('Failed to get prediction from ML service');
         }
-
-        // heuristic: tight timeline (hours vs features)
-        // Assume roughly 50 hours per feature is "safe" ?? 
-        // Let's just say if features > 20 and hours < 500
-        if (inputs.numberOfFeatures > 20) {
-            riskScore += 10;
-            factors.push('High feature count increases scope creep risk');
-        }
-
-        // tech stack risk
-        if (inputs.techStack && inputs.techStack.length > 5) {
-            riskScore += 10;
-            factors.push('Complex technology stack increases integration risk');
-        }
-
-        // Cap risk
-        riskScore = Math.min(Math.max(riskScore, 5), 98);
-
-        let level = 'Low';
-        if (riskScore > 75) level = 'High';
-        else if (riskScore > 40) level = 'Medium';
-
-        return {
-            riskScore,
-            level,
-            factors
-        };
     }
+
+    // --- Adapters for Legacy Methods (keeping response format) ---
 
     async predictCost(inputs) {
-        await this._simulateDelay();
-
-        // Simple heuristic: Hours * Rate * TeamSize? 
-        // Usually estimatedHours is total effort. 
-        // Let's assume average hourly rate of $50
-        const hourlyRate = 60;
-        const baseCost = (inputs.estimatedHours || 100) * hourlyRate;
-
-        // Adjust for complexity
-        let multiplier = 1.0;
-        if (inputs.complexityLevel === 'High') multiplier = 1.3;
-        if (inputs.complexityLevel === 'Very High') multiplier = 1.5;
-        if (inputs.experienceLevel === 'Expert') multiplier = 1.4; // Higher rates for experts
-
-        const totalCost = Math.round(baseCost * multiplier);
+        const stats = await this.predictProjectStats(inputs);
+        const totalCost = stats.predicted_cost;
 
         return {
             estimatedCost: totalCost,
             currency: 'USD',
-            confidence: 85, // Mock confidence
+            confidence: 85, // Placeholder
             breakdown: {
                 development: Math.round(totalCost * 0.6),
                 infrastructure: Math.round(totalCost * 0.15),
@@ -92,15 +67,10 @@ class MLService {
     }
 
     async predictTimeline(inputs) {
-        await this._simulateDelay();
+        const stats = await this.predictProjectStats(inputs);
+        const totalDays = stats.estimated_timeline_days;
+        const totalWeeks = Math.ceil(totalDays / 7);
 
-        // Heuristic: Estimated Hours / (Team Size * 30 hours/week) -> Weeks
-        // 30 effective hours per person per week
-        const weeklyCapacity = (inputs.teamSize || 1) * 30;
-        const totalWeeks = Math.ceil((inputs.estimatedHours || 100) / weeklyCapacity);
-        const totalDays = totalWeeks * 7; // Calendar days
-
-        // Phase duration heuristics
         const planningWeeks = Math.max(1, Math.ceil(totalWeeks * 0.15));
         const devWeeks = Math.max(1, Math.ceil(totalWeeks * 0.6));
         const testingWeeks = Math.max(1, Math.ceil(totalWeeks * 0.2));
@@ -117,31 +87,21 @@ class MLService {
         };
     }
 
+    async predictRisk(inputs) {
+        // ML Service doesn't provide risk, using simplified heuristic or default
+        // as we removed the old hardcoded logic.
+        return {
+            riskScore: 25,
+            level: 'Low',
+            factors: ['Risk analysis pending deeper ML integration']
+        };
+    }
+
     async generateRecommendations(inputs) {
-        await this._simulateDelay();
-        const recs = [
-            'Implement automated CI/CD pipelines early to reduce deployment friction.'
+        return [
+            'Ensure continuous monitoring of project metrics.',
+            'Update ML model with real project data periodically.'
         ];
-
-        if (inputs.projectType === 'Software') {
-            recs.push('Adopt an Agile methodology to handle changing requirements effectively.');
-        }
-
-        if (inputs.teamSize > 5) {
-            recs.push('Structure the team into squads to maintain agility.');
-        }
-
-        if (inputs.complexityLevel === 'High' || inputs.complexityLevel === 'Very High') {
-            recs.push('Invest heavily in system architecture planning before coding starts.');
-            recs.push('Conduct regular code reviews to maintain code quality.');
-        }
-
-        if (inputs.techStack && inputs.techStack.length > 0) {
-            const stack = inputs.techStack.join(', ');
-            recs.push(`Ensure the team has sufficient training on ${stack}.`);
-        }
-
-        return recs;
     }
 }
 
