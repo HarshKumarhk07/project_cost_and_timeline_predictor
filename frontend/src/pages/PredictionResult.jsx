@@ -112,7 +112,9 @@ const PredictionResult = () => {
                     </div>
                     <h3 className="text-sm font-medium text-gray-600 mb-2">Estimated Cost</h3>
                     <p className="text-4xl font-bold text-gray-900 mb-4">
-                        ${(cost.estimatedCost || 0).toLocaleString()}
+                        {(cost.estimatedCost === null || cost.estimatedCost === undefined)
+                            ? 'Processing...'
+                            : `$${cost.estimatedCost.toLocaleString()}`}
                     </p>
                     {cost.breakdown && (
                         <div className="pt-4 border-t border-gray-200 space-y-2">
@@ -144,10 +146,14 @@ const PredictionResult = () => {
                     </div>
                     <h3 className="text-sm font-medium text-gray-600 mb-2">Timeline</h3>
                     <p className="text-4xl font-bold text-gray-900 mb-1">
-                        {Math.ceil((timeline.estimatedDurationDays || 0) / 7)}
+                        {(timeline.estimatedDurationDays === null || timeline.estimatedDurationDays === undefined)
+                            ? 'Processing...'
+                            : `${Math.ceil(timeline.estimatedDurationDays / 7)} Weeks`}
                     </p>
                     <p className="text-gray-600 mb-4">
-                        {timeline.estimatedDurationDays || 0} days total
+                        {(timeline.estimatedDurationDays === null || timeline.estimatedDurationDays === undefined)
+                            ? 'Analysis in progress'
+                            : `${timeline.estimatedDurationDays} days total`}
                     </p>
                     {timeline.phases && timeline.phases.length > 0 && (
                         <div className="pt-4 border-t border-gray-200">

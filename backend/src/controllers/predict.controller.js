@@ -276,8 +276,8 @@ exports.predictProject = async (req, res) => {
         console.log(`PREDICTION SAVED TO DB (ID: ${prediction._id}) - Status: PENDING_ML`);
 
         // 3. Call Python ML API via Service
-        let predicted_cost = 0;
-        let estimated_timeline_days = 0;
+        let predicted_cost = null;
+        let estimated_timeline_days = null;
         let mlSuccess = false;
 
         try {
@@ -293,11 +293,9 @@ exports.predictProject = async (req, res) => {
             mlSuccess = true;
 
         } catch (mlError) {
-            console.warn("ML SERVICE FAILED:", mlError.message);
-            // Fallback to basic calculation if ML fails, or just 0?
-            // "Handle timeout and errors safely".
-            // If ML fails, we probably shouldn't return 0 if possible, but for now 0 is safe/handled.
-            // We'll proceed with mlSuccess = false.
+            console.warn("ML SERVICE FAILED (Rate Limit or Check):", mlError.message);
+            // Don't update values, keep them null.
+            // Status remains 'pending_ml' as initialized.
         }
 
         // 4. Update MongoDB with results (if ML succeeded)
@@ -318,6 +316,11 @@ exports.predictProject = async (req, res) => {
             prediction.status = 'completed';
             await prediction.save();
             console.log(`PREDICTION UPDATED (ID: ${prediction._id}) - Status: COMPLETED`);
+        } else {
+            // Explicitly ensure status is correct if needed, though it started as pending_ml
+            prediction.status = 'pending_ml';
+            await prediction.save();
+            console.log(`PREDICTION PENDING (ID: ${prediction._id}) - Status: PENDING_ML (ML Service Failed)`);
         }
 
         // MANDATORY: Return flat JSON object

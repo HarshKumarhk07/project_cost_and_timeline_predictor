@@ -82,11 +82,11 @@ const NewPrediction = () => {
                     predictionId: predictionId || `temp-${Date.now()}`,
                     data: {
                         cost: {
-                            estimatedCost: resolvedCost ?? 0,
+                            estimatedCost: resolvedCost,
                             confidence: 85
                         },
                         timeline: {
-                            estimatedDurationDays: resolvedTimeline ?? 0,
+                            estimatedDurationDays: resolvedTimeline,
                             phases: []
                         },
 

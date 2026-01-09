@@ -167,13 +167,13 @@ const History = () => {
                                             <div>
                                                 <p className="text-sm text-gray-600">Cost Estimate</p>
                                                 <p className="text-lg font-semibold text-gray-900">
-                                                    ${cost.toLocaleString()}
+                                                    {(cost === null || cost === undefined || cost === 0) ? 'Processing...' : `$${cost.toLocaleString()}`}
                                                 </p>
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-600">Timeline</p>
                                                 <p className="text-lg font-semibold text-gray-900">
-                                                    {Math.ceil(timeline / 7)} weeks
+                                                    {(timeline === null || timeline === undefined || timeline === 0) ? 'Processing...' : `${Math.ceil(timeline / 7)} weeks`}
                                                 </p>
                                             </div>
                                             <div>

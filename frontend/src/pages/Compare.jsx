@@ -101,8 +101,8 @@ const Compare = () => {
                                             key={p._id}
                                             onClick={() => toggleSelection(p._id)}
                                             className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${isSelected
-                                                    ? 'border-indigo-500 bg-indigo-50'
-                                                    : 'border-gray-200 hover:border-indigo-300 bg-white'
+                                                ? 'border-indigo-500 bg-indigo-50'
+                                                : 'border-gray-200 hover:border-indigo-300 bg-white'
                                                 }`}
                                         >
                                             <div className="flex items-start justify-between mb-2">
@@ -113,7 +113,7 @@ const Compare = () => {
                                             </div>
                                             <p className="text-sm text-gray-600 mb-1">{p.projectType}</p>
                                             <p className="text-sm font-medium text-gray-900 mb-2">
-                                                ${cost.toLocaleString()}
+                                                {(cost === null || cost === undefined || cost === 0) ? 'Processing...' : `$${cost.toLocaleString()}`}
                                             </p>
                                             <p className="text-xs text-gray-500">
                                                 {new Date(p.createdAt).toLocaleDateString()}
@@ -155,15 +155,17 @@ const Compare = () => {
                                         <div>
                                             <p className="text-xs text-gray-600 uppercase tracking-wide mb-1">Estimated Cost</p>
                                             <p className="text-2xl font-bold text-gray-900">
-                                                ${cost.toLocaleString()}
+                                                {(cost === null || cost === undefined || cost === 0) ? 'Processing...' : `$${cost.toLocaleString()}`}
                                             </p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-600 uppercase tracking-wide mb-1">Timeline</p>
                                             <p className="text-2xl font-bold text-gray-900">
-                                                {Math.ceil(timeline / 7)} weeks
+                                                {(timeline === null || timeline === undefined || timeline === 0) ? 'Processing...' : `${Math.ceil(timeline / 7)} weeks`}
                                             </p>
-                                            <p className="text-sm text-gray-600">{timeline} days</p>
+                                            <p className="text-sm text-gray-600">
+                                                {(timeline === null || timeline === undefined || timeline === 0) ? 'Analysis in progress' : `${timeline} days`}
+                                            </p>
                                         </div>
                                         <div className="pt-4 border-t border-gray-200">
                                             <p className="text-xs text-gray-600 uppercase tracking-wide mb-1">Project Type</p>

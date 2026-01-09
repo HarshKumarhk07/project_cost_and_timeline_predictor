@@ -15,12 +15,14 @@ const {
 
 router.use(auth);
 
+const rateLimiter = require('../middleware/apiRateLimit');
+
 router.post('/risk-analysis', analyzeRisk);
 router.post('/cost-breakdown', costBreakdown);
 router.post('/timeline-breakdown', timelineBreakdown);
 router.post('/recommendations', getRecommendations);
 router.post('/full-analysis', fullAnalysis);
-router.post('/', predictProject); // Main prediction endpoint
+router.post('/', rateLimiter, predictProject); // Main prediction endpoint
 
 router.get('/compare', comparePredictions);
 
